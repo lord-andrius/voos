@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
+#include "main.h"
 
 #define COUNT 10
 
@@ -57,9 +58,10 @@ long long cria_numero_voo(struct data data, const char* origem, const char* dest
 // cria ou adiciona elementos na árvore
 // retorna 0 no sucesso
 int adiciona_ou_cria_arvore(struct arvore** arvore, struct data data, int num_assentos, const char* origem, const char* destino) {
-	if (num_assentos < 0) return 1;
-
+	if(num_assentos < 0) return 1;
 	long long numero_voo = cria_numero_voo(data, origem, destino);
+	if(pegar_elemento(*arvore, numero_voo) != NULL) return 1; // já tem um elemento igual
+
 	size_t tamanho_str_origem = strlen(origem) > 9 ? 10 : strlen(origem);
 	size_t tamanho_str_destino = strlen(destino) > 9 ? 10 : strlen(destino);
 
@@ -238,21 +240,41 @@ void deletar_elemento(struct arvore* arvore, long long numero_voo) {
 	}
 }
 
-#if 0
-#endif
+// Se o nivel for 0 vai retornar a potencia de dois correspondente ao último nível
+// se o nivel for 1 vai retornar a quantidade de niveis
+int ultimo_nivel(struct arvore *arvore, int nivel) {
+	if(arvore == NULL) {
+		return 0;
+	} else {
+		int nivel_esquerda = ultimo_nivel(arvore->filho_esquerda, nivel + 1);
+		int nivel_direita = ultimo_nivel(arvore->filho_direita, nivel + 1);
+		if(nivel > nivel_esquerda && nivel > nivel_direita) {
+			return nivel;
+		} else {
+			return nivel_esquerda > nivel_direita ? nivel_esquerda : nivel_direita;
+		}
+	}
+}
+
+int qtd_voos(struct arvore *arvore) {
+	if(arvore == NULL) return 0;
+	return 1 + qtd_voos(arvore->filho_esquerda) + qtd_voos(arvore->filho_direita);
+}
+
 int main(void) {
 	struct arvore* arvore = NULL;
 	struct voo voos[] = {
-		(struct voo) {.num_assentos = 5, .origem = "a" ,.destino = "b", .data = {10,45,1,4,2024}},
-		(struct voo) {.num_assentos = 10, .origem = "a" ,.destino = "b", .data = {10,46,2,4,2024}},
-		(struct voo) {.num_assentos = 20, .origem = "a" ,.destino = "b", .data = {10,43,2,4,2024}},
+		(struct voo) {.num_assentos = 5, .origem = "a" ,.destino = "b",  .data = {10,45,2,4,2024}},
+		(struct voo) {.num_assentos = 5, .origem = "a" ,.destino = "b",  .data = {10,46,2,4,2024}},
+		(struct voo) {.num_assentos = 5, .origem = "a" ,.destino = "b",  .data = {10,47,2,4,2024}},
 	};
 	adiciona_elementos(&arvore, voos, 3);
-	mostrar(arvore,1);
-	puts("==========================");
-	deletar_elemento(arvore,arvore->voo.numero_voo);
-	mostrar(arvore,1);
-
+	adiciona_ou_cria_arvore(&arvore, (struct data){10,47,2,4,2024}, 5,"a","b");
+	mostrar(arvore, 1);
+	puts("===================================");
+	mostrar(arvore, 1);
+	printf("ultimo nivel: %d\n", ultimo_nivel(arvore, 0));
+	printf("Quantidade de voos: %d\n", qtd_voos(arvore));
 	return 0;
 }
 
