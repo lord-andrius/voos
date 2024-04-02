@@ -262,13 +262,28 @@ int qtd_voos(struct arvore *arvore) {
 	return 1 + qtd_voos(arvore->filho_esquerda) + qtd_voos(arvore->filho_direita);
 }
 
+void arvore_para_vetor(struct arvore* arvore, struct voo **voos, int *index) {
+	if(arvore == NULL) {
+		//*index -= 1;
+		return;
+	}
+
+	*voos = realloc(*voos, sizeof(struct voo) * (*index + 1));
+	if (*voos == NULL) {
+		return 1;
+	}
+	printf("colocado:%lld\n", arvore->voo.numero_voo);
+	((*voos))[*index] = arvore->voo;
+	*index += 1;
+	arvore_para_vetor(arvore->filho_esquerda, voos, index);
+	arvore_para_vetor(arvore->filho_direita, voos, index);
+}
+
 int precisa_balancear(struct arvore *arvore) {
 	int qtd_voos_real = qtd_voos(arvore);
-	int qtd_voos_que_deveria_ter = pow(2, ultimo_nivel(arvore, 0) + 1);
+	int qtd_voos_que_deveria_ter = pow(2, ultimo_nivel(arvore, 0) + 1); // 2^(n + 1) - 1 - formula para dar o maximo de nos
 	qtd_voos_que_deveria_ter -= 1;
-	printf("qtd_voos_real: %d\n", qtd_voos_real);
-	printf("qtd_voos_que_deveria_ter: %d\n", qtd_voos_que_deveria_ter);
-	return 0;
+	return qtd_voos_real != qtd_voos_que_deveria_ter;
 }
 
 int main(void) {
@@ -279,13 +294,17 @@ int main(void) {
 		(struct voo) {.num_assentos = 5, .origem = "a" ,.destino = "b",  .data = {10,47,2,4,2024}},
 	};
 	adiciona_elementos(&arvore, voos, 3);
-	//adiciona_ou_cria_arvore(&arvore, (struct data){10,48,2,4,2024}, 5,"a","b");
+	adiciona_ou_cria_arvore(&arvore, (struct data) { 10, 48, 2, 4, 2024 }, 5, "a", "b");
 	//adiciona_ou_cria_arvore(&arvore, (struct data){10,49,2,4,2024}, 5,"a","b");
 	mostrar(arvore, 1);
 	puts("===================================");
 	printf("ultimo nivel: %d\n", ultimo_nivel(arvore, 0));
 	printf("Quantidade de voos: %d\n", qtd_voos(arvore));
-	precisa_balancear(arvore);
+	printf("precisa balancear: %d\n",precisa_balancear(arvore));
+	struct voo *array_voos = NULL;
+	int indice = 0;
+	arvore_para_vetor(arvore, &array_voos, &indice);
+	printf("%d\n",indice);
 	return 0;
 }
 

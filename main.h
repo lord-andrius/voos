@@ -22,4 +22,8 @@ int ultimo_nivel(struct arvore *arvore, int nivel);
 
 int qtd_voos(struct arvore *arvore); 
 
+int precisa_balancear(struct arvore* arvore);
+
+void arvore_para_vetor(struct arvore* arvore, struct voo** voos, int* index);
+
 #endif
