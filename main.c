@@ -171,13 +171,12 @@ struct arvore* pegar_elemento(struct arvore* arvore, long long numero_voo) {
 	}
 }
 
-#if 0
 
 void andar_em_ordem_crescente(struct arvore* arvore) {
 
 	if (arvore != NULL) {
 		andar_em_ordem_crescente(arvore->filho_esquerda);
-		printf("%d\n", arvore->dado);
+		printf("%lld\n", arvore->voo.numero_voo);
 		andar_em_ordem_crescente(arvore->filho_direita);
 	}
 }
@@ -196,7 +195,7 @@ void mostrar(struct arvore* arvore, int space) {
 
 	for (int i = COUNT; i < space; i++) printf(" ");
 
-	printf("%d\n", arvore->dado);
+	printf("%lld\n", arvore->voo.numero_voo);
 
 	mostrar(arvore->filho_esquerda, space);
 }
@@ -207,12 +206,12 @@ struct arvore* pegar_sucessor(struct arvore* arvore) {
 	return sucessor;
 }
 
-void deletar_elemento(struct arvore* arvore, int dado) {
-	struct arvore* no = pegar_elemento(arvore, dado);
+void deletar_elemento(struct arvore* arvore, long long numero_voo) {
+	struct arvore* no = pegar_elemento(arvore, numero_voo);
 	if (no == NULL) return;
 
 	if (no->filho_esquerda == NULL && no->filho_direita == NULL) {
-		if (no->pai->dado > dado) { // Quer dizer que o que eu estou tentando exclúir está na esquerda do pai
+		if (no->pai->voo.numero_voo > numero_voo) { // Quer dizer que o que eu estou tentando exclúir está na esquerda do pai
 			no->pai->filho_esquerda = NULL;
 			free(no);
 		}
@@ -223,45 +222,36 @@ void deletar_elemento(struct arvore* arvore, int dado) {
 	}
 	else if (no->filho_esquerda && no->filho_direita) {
 		struct arvore* sucessor = pegar_sucessor(no);
-		no->dado = sucessor->dado;
+		no->voo = sucessor->voo;
 		//sucessor->pai->filho_esquerda = NULL;
-		deletar_elemento(sucessor, sucessor->dado);
+		deletar_elemento(sucessor, sucessor->voo.numero_voo);
 	}
 	else if (no->filho_esquerda) {
-		no->dado = no->filho_esquerda->dado;
-		deletar_elemento(no->filho_esquerda, no->filho_esquerda->dado);
+		no->voo = no->filho_esquerda->voo;
+		deletar_elemento(no->filho_esquerda, no->filho_esquerda->voo.numero_voo);
 		no->filho_esquerda = NULL;
 	}
 	else if (no->filho_direita) {
-		no->dado = no->filho_direita->dado;
-		deletar_elemento(no->filho_direita, no->filho_direita->dado);
+		no->voo = no->filho_direita->voo;
+		deletar_elemento(no->filho_direita, no->filho_direita->voo.numero_voo);
 		no->filho_direita = NULL;
 	}
 }
+
+#if 0
 #endif
 int main(void) {
 	struct arvore* arvore = NULL;
 	struct voo voos[] = {
-		(struct voo) {
- .num_assentos = 5, .origem = "SBSP" ,.destino = "SBAM", .data = {10,45,1,4,2024}
-},
-(struct voo) {
-.num_assentos = 10, .origem = "SBAM" ,.destino = "SBSP", .data = {10,45,2,4,2024}
-},
+		(struct voo) {.num_assentos = 5, .origem = "a" ,.destino = "b", .data = {10,45,1,4,2024}},
+		(struct voo) {.num_assentos = 10, .origem = "a" ,.destino = "b", .data = {10,46,2,4,2024}},
+		(struct voo) {.num_assentos = 20, .origem = "a" ,.destino = "b", .data = {10,43,2,4,2024}},
 	};
-	adiciona_elementos(&arvore, voos, 2);
-
-
-	//adiciona_ou_cria_arvore(&arvore, (struct data) { 10, 45, 1, 4, 2024 },5, "rio de janeiro", "teresina");
-	puts("comeco arvore 1");
-	printf("%lld\n", arvore->voo.numero_voo);
-	puts(arvore->voo.origem);
-	puts(arvore->voo.destino);
-	puts("comeco pegada");
-	struct arvore *pegada = pegar_elemento(arvore, arvore->voo.numero_voo);	
-	printf("%lld\n", pegada->voo.numero_voo);
-	puts(pegada->voo.origem);
-	puts(pegada->voo.destino);
+	adiciona_elementos(&arvore, voos, 3);
+	mostrar(arvore,1);
+	puts("==========================");
+	deletar_elemento(arvore,arvore->voo.numero_voo);
+	mostrar(arvore,1);
 
 	return 0;
 }
