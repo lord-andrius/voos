@@ -21,4 +21,5 @@ void deletar_elemento(struct arvore* arvore, long long numero_voo);
 int ultimo_nivel(struct arvore *arvore, int nivel); 
 
 int qtd_voos(struct arvore *arvore); 
+
 #endif

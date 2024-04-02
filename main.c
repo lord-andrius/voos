@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
+#include <math.h>
 #include "main.h"
 
 #define COUNT 10
@@ -261,6 +262,15 @@ int qtd_voos(struct arvore *arvore) {
 	return 1 + qtd_voos(arvore->filho_esquerda) + qtd_voos(arvore->filho_direita);
 }
 
+int precisa_balancear(struct arvore *arvore) {
+	int qtd_voos_real = qtd_voos(arvore);
+	int qtd_voos_que_deveria_ter = pow(2, ultimo_nivel(arvore, 0) + 1);
+	qtd_voos_que_deveria_ter -= 1;
+	printf("qtd_voos_real: %d\n", qtd_voos_real);
+	printf("qtd_voos_que_deveria_ter: %d\n", qtd_voos_que_deveria_ter);
+	return 0;
+}
+
 int main(void) {
 	struct arvore* arvore = NULL;
 	struct voo voos[] = {
@@ -269,12 +279,13 @@ int main(void) {
 		(struct voo) {.num_assentos = 5, .origem = "a" ,.destino = "b",  .data = {10,47,2,4,2024}},
 	};
 	adiciona_elementos(&arvore, voos, 3);
-	adiciona_ou_cria_arvore(&arvore, (struct data){10,47,2,4,2024}, 5,"a","b");
+	//adiciona_ou_cria_arvore(&arvore, (struct data){10,48,2,4,2024}, 5,"a","b");
+	//adiciona_ou_cria_arvore(&arvore, (struct data){10,49,2,4,2024}, 5,"a","b");
 	mostrar(arvore, 1);
 	puts("===================================");
-	mostrar(arvore, 1);
 	printf("ultimo nivel: %d\n", ultimo_nivel(arvore, 0));
 	printf("Quantidade de voos: %d\n", qtd_voos(arvore));
+	precisa_balancear(arvore);
 	return 0;
 }
 
