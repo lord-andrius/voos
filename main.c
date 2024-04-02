@@ -13,7 +13,9 @@
 #define HORA_MINUTOS 60LL
 #define DIA_MINUTOS 1440LL
 #define MES_MINUTOS 43200LL
-#define ANO_MINUTOS 15768000LL
+#define ANO_MINUTOS 518400LL
+
+#define DATA_MINIMA_MINUTOS 4636LL
 
 struct arvore {
 	struct voo {
@@ -43,7 +45,12 @@ long long cria_numero_voo(struct data data, const char* origem, const char* dest
 	for (int i = 0; i < strlen(destino); i++) {
 		soma_destino += destino[i];
 	}
-	return (data.ano * ANO_MINUTOS) + (data.mes * MES_MINUTOS) + (data.dia * DIA_MINUTOS) + (data.horas * HORA_MINUTOS) + data.minutos + soma_destino + soma_origem;
+	long long data_minutos = (data.ano * ANO_MINUTOS) + (data.mes * MES_MINUTOS) + (data.dia * DIA_MINUTOS) + (data.horas * HORA_MINUTOS) + data.minutos;
+	if(data_minutos < DATA_MINIMA_MINUTOS) {
+		puts("Essa data é inválida");
+		exit(0);
+	}
+	return data_minutos + soma_destino + soma_origem;
 }
 
 // cria ou adiciona elementos na árvore
