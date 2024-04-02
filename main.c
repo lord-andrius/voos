@@ -15,7 +15,8 @@
 #define MES_MINUTOS 43200LL
 #define ANO_MINUTOS 518400LL
 
-#define DATA_MINIMA_MINUTOS 4636LL
+#define PESO_MINUTO 122LL
+#define DATA_MINIMA_MINUTOS 11834LL // abaixo disso pode dar conflito
 
 struct arvore {
 	struct voo {
@@ -45,7 +46,7 @@ long long cria_numero_voo(struct data data, const char* origem, const char* dest
 	for (int i = 0; i < strlen(destino); i++) {
 		soma_destino += destino[i];
 	}
-	long long data_minutos = (data.ano * ANO_MINUTOS) + (data.mes * MES_MINUTOS) + (data.dia * DIA_MINUTOS) + (data.horas * HORA_MINUTOS) + data.minutos;
+	long long data_minutos = (data.ano * ANO_MINUTOS) + (data.mes * MES_MINUTOS) + (data.dia * DIA_MINUTOS) + (data.horas * HORA_MINUTOS) + (data.minutos * PESO_MINUTO); // O peso do minuto é necessario para quando a data difere de poucos minutos
 	if(data_minutos < DATA_MINIMA_MINUTOS) {
 		puts("Essa data é inválida");
 		exit(0);
@@ -154,7 +155,6 @@ int adiciona_elementos(struct arvore** arvore, struct voo voos[], size_t length)
 	}
 }
 
-#if 0
 struct arvore* pegar_elemento(struct arvore* arvore, long long numero_voo) {
 	if (arvore == NULL) {
 		return NULL;
@@ -163,14 +163,15 @@ struct arvore* pegar_elemento(struct arvore* arvore, long long numero_voo) {
 	else if (arvore->voo.numero_voo == numero_voo) {
 		return arvore;
 	}
-	else if (arvore->dado < dado) {
-		return pegar_elemento(arvore->filho_direita, dado);
+	else if (arvore->voo.numero_voo < numero_voo) {
+		return pegar_elemento(arvore->filho_direita, numero_voo);
 	}
 	else {
-		return pegar_elemento(arvore->filho_esquerda, dado);
+		return pegar_elemento(arvore->filho_esquerda, numero_voo);
 	}
 }
 
+#if 0
 
 void andar_em_ordem_crescente(struct arvore* arvore) {
 
@@ -245,7 +246,7 @@ int main(void) {
  .num_assentos = 5, .origem = "SBSP" ,.destino = "SBAM", .data = {10,45,1,4,2024}
 },
 (struct voo) {
-.num_assentos = 10, .origem = "SBAM" ,.destino = "SBSP", .data = {10,45,1,4,2024}
+.num_assentos = 10, .origem = "SBAM" ,.destino = "SBSP", .data = {10,45,2,4,2024}
 },
 	};
 	adiciona_elementos(&arvore, voos, 2);
@@ -256,10 +257,11 @@ int main(void) {
 	printf("%lld\n", arvore->voo.numero_voo);
 	puts(arvore->voo.origem);
 	puts(arvore->voo.destino);
-	puts("comeco arvore 2");
-	printf("%lld\n", arvore->filho_direita->voo.numero_voo);
-	puts(arvore->filho_direita->voo.origem);
-	puts(arvore->filho_direita->voo.destino);
+	puts("comeco pegada");
+	struct arvore *pegada = pegar_elemento(arvore, arvore->voo.numero_voo);	
+	printf("%lld\n", pegada->voo.numero_voo);
+	puts(pegada->voo.origem);
+	puts(pegada->voo.destino);
 
 	return 0;
 }
