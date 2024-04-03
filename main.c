@@ -435,6 +435,31 @@ void adiciona_7_elementos(struct arvore **arvore) {
 	adiciona_elementos(arvore, voos, 7);
 }
 
+void pesquisar(struct arvore *arvore, struct voo voo) {
+	if (arvore != NULL) {
+		pesquisar(arvore->filho_esquerda, voo);
+		if(arvore->voo.num_assentos >= voo.num_assentos && 
+		   	arvore->voo.data.ano >= voo.data.ano &&
+			arvore->voo.data.mes >= voo.data.mes &&
+			arvore->voo.data.dia >= voo.data.dia
+		   ) {
+			printf("numer:%lld - assentos disponiveis: %d - data: %02d:%02d %02d/%02d/%02d - origem: %s - destino: %s\n", 
+				arvore->voo.numero_voo, 
+				arvore->voo.num_assentos,
+				arvore->voo.data.horas, 
+				arvore->voo.data.minutos,
+				arvore->voo.data.dia,
+				arvore->voo.data.mes,
+				arvore->voo.data.ano,
+				arvore->voo.origem,
+				arvore->voo.destino
+			);
+		}
+		pesquisar(arvore->filho_direita, voo);
+	}
+}
+
+
 int main(void) {
 	srand(time(0));
 	struct arvore* arvore = NULL;
@@ -451,7 +476,8 @@ int main(void) {
 		puts("[5] - para ver todos os voos com menos de 10 assentos disponiveis");
 		puts("[6] - para ver a arvore(numero voo apenas)");
 		puts("[7] - para excluir um voo");
-		puts("[8] - para sair");
+		puts("[8] - para pesquisar: ");
+		puts("[9] - para sair");
 		puts("========================");
 		printf("Digite a sua opcao:");
 		scanf("%d", &opcao);
@@ -506,6 +532,35 @@ int main(void) {
 				esperar_espaco();
 				break;
 			case 8:
+				puts("==========REGRAS DA PESQUISA==========");
+				puts("1 - Seram mostrados os voos com o número de assentos maiores o iguais ao valor digitado!");
+				puts("2 - Para ignorar pegar voos com qualquer número de assentos use um valor negativo no numero de assentos");
+				puts("3 - Seram mostrados os voos apartir da data informada");
+				puts("======================================");
+				esperar_espaco();
+				int dia, mes, ano, num_assentos;
+				printf("Digite o numero de assentos: ");
+				scanf("%d",&num_assentos);
+				limpar_stdin();
+				printf("Digite o dia: ");
+				scanf("%d", &dia);
+				limpar_stdin();
+				printf("Digite o mes(01 - 12): ");
+				scanf("%d", &mes);
+				limpar_stdin();
+				printf("Digite o ano: ");
+				scanf("%d", &ano);
+				limpar_stdin();
+				voo = (struct voo){
+					.data = (struct data){0,0,dia, mes, ano},
+					.num_assentos = num_assentos,
+					.origem = {0},
+					.destino = {0},
+				};
+				pesquisar(arvore, voo);
+
+				break;
+			case 9:
 				continuar = 0;
 				break;
 			default:

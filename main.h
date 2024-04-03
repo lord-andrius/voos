@@ -75,4 +75,7 @@ void palavra_aleatoria(char str[], int tamanho);
 struct voo voo_aleatorio(struct arvore *arvore); 
 
 void adiciona_7_elementos(struct arvore **arvore); 
+
+void pesquisar(struct arvore *arvore, struct voo voo);
+
 #endif
