@@ -9,6 +9,7 @@
 #include <assert.h>
 #include <math.h>
 #include "main.h"
+#include <time.h>
 
 #define COUNT 10
 
@@ -20,24 +21,6 @@
 #define PESO_MINUTO 122LL
 #define DATA_MINIMA_MINUTOS 11834LL // abaixo disso pode dar conflito
 
-struct arvore {
-	struct voo {
-		long long numero_voo;
-		int num_assentos;
-		struct data {
-			int horas;
-			int minutos;
-			int dia;
-			int mes;
-			int ano;
-		} data;
-		char origem[11];
-		char destino[11];
-	} voo;
-	struct arvore* pai;
-	struct arvore* filho_esquerda;
-	struct arvore* filho_direita;
-};
 
 long long cria_numero_voo(struct data data, const char* origem, const char* destino) {
 	long long soma_origem, soma_destino;
@@ -121,6 +104,7 @@ int adiciona_ou_cria_arvore(struct arvore** arvore, struct data data, int num_as
 		}
 	}
 
+	
 	return 0;
 }
 
@@ -176,14 +160,63 @@ struct arvore* pegar_elemento(struct arvore* arvore, long long numero_voo) {
 
 
 void andar_em_ordem_crescente(struct arvore* arvore) {
-
 	if (arvore != NULL) {
 		andar_em_ordem_crescente(arvore->filho_esquerda);
-		printf("%lld\n", arvore->voo.numero_voo);
+		printf("numer:%lld - assentos disponiveis: %d - data: %02d:%02d %02d/%02d/%02d - origem: %s - destino: %s\n", 
+			arvore->voo.numero_voo, 
+			arvore->voo.num_assentos,
+			arvore->voo.data.horas, 
+			arvore->voo.data.minutos,
+			arvore->voo.data.dia,
+			arvore->voo.data.mes,
+			arvore->voo.data.ano,
+			arvore->voo.origem,
+			arvore->voo.destino
+		);
 		andar_em_ordem_crescente(arvore->filho_direita);
 	}
 }
 
+void andar_em_ordem_crescente_disponiveis(struct arvore* arvore) {
+	if (arvore != NULL) {
+		andar_em_ordem_crescente(arvore->filho_esquerda);
+		if(arvore->voo.num_assentos > 0) {
+			printf("numer:%lld - assentos disponiveis: %d - data: %02d:%02d %02d/%02d/%02d - origem: %s - destino: %s\n", 
+				arvore->voo.numero_voo, 
+				arvore->voo.num_assentos,
+				arvore->voo.data.horas, 
+				arvore->voo.data.minutos,
+				arvore->voo.data.dia,
+				arvore->voo.data.mes,
+				arvore->voo.data.ano,
+				arvore->voo.origem,
+				arvore->voo.destino
+			);
+		}
+		andar_em_ordem_crescente(arvore->filho_direita);
+	}
+}
+
+void andar_em_ordem_crescente_assentos_10(struct arvore* arvore) {
+	if (arvore != NULL) {
+		andar_em_ordem_crescente(arvore->filho_esquerda);
+		if(arvore->voo.num_assentos < 10) {
+			printf("numer:%lld - assentos disponiveis: %d - data: %02d:%02d %02d/%02d/%02d - origem: %s - destino: %s\n", 
+				arvore->voo.numero_voo, 
+				arvore->voo.num_assentos,
+				arvore->voo.data.horas, 
+				arvore->voo.data.minutos,
+				arvore->voo.data.dia,
+				arvore->voo.data.mes,
+				arvore->voo.data.ano,
+				arvore->voo.origem,
+				arvore->voo.destino
+			);
+		}
+		andar_em_ordem_crescente(arvore->filho_direita);
+	}
+
+}
 void mostrar(struct arvore* arvore, int space) {
 
 	if (arvore == NULL) {
@@ -214,6 +247,10 @@ void deletar_elemento(struct arvore* arvore, long long numero_voo) {
 	if (no == NULL) return;
 
 	if (no->filho_esquerda == NULL && no->filho_direita == NULL) {
+		if(no->pai == NULL) {
+			free(no);
+			return;
+		}
 		if (no->pai->voo.numero_voo > numero_voo) { // Quer dizer que o que eu estou tentando exclúir está na esquerda do pai
 			no->pai->filho_esquerda = NULL;
 			free(no);
@@ -261,50 +298,223 @@ int qtd_voos(struct arvore *arvore) {
 	if(arvore == NULL) return 0;
 	return 1 + qtd_voos(arvore->filho_esquerda) + qtd_voos(arvore->filho_direita);
 }
+	
 
-void arvore_para_vetor(struct arvore* arvore, struct voo **voos, int *index) {
+void arvore_para_vetor(struct arvore* arvore, struct vetor_voos *voos) {
 	if(arvore == NULL) {
-		//*index -= 1;
 		return;
 	}
+	arvore_para_vetor(arvore->filho_esquerda, voos);
+	arvore_para_vetor(arvore->filho_direita, voos);
+	voos->tamanho += 1;
+	voos->voos = realloc(voos->voos, sizeof(struct voo) * (voos->tamanho == 0 ? 1 : voos->tamanho));
+	voos->voos[voos->tamanho - 1] = arvore->voo;
 
-	*voos = realloc(*voos, sizeof(struct voo) * (*index + 1));
-	if (*voos == NULL) {
-		return 1;
-	}
-	printf("colocado:%lld\n", arvore->voo.numero_voo);
-	((*voos))[*index] = arvore->voo;
-	*index += 1;
-	arvore_para_vetor(arvore->filho_esquerda, voos, index);
-	arvore_para_vetor(arvore->filho_direita, voos, index);
 }
 
 int precisa_balancear(struct arvore *arvore) {
-	int qtd_voos_real = qtd_voos(arvore);
-	int qtd_voos_que_deveria_ter = pow(2, ultimo_nivel(arvore, 0) + 1); // 2^(n + 1) - 1 - formula para dar o maximo de nos
-	qtd_voos_que_deveria_ter -= 1;
-	return qtd_voos_real != qtd_voos_que_deveria_ter;
+	if(arvore == NULL) return 0;
+
+	return abs(ultimo_nivel(arvore->filho_esquerda,1) - ultimo_nivel(arvore->filho_direita, 1)) > 1;
+}
+
+void deletar_arvore(struct arvore *arvore) {
+	if(arvore != NULL) {
+		deletar_arvore(arvore->filho_esquerda);
+		deletar_arvore(arvore->filho_direita);
+		free(arvore);
+	}
+}
+
+void balancear_arvore(struct arvore **arvore) {
+	if(qtd_voos(*arvore) == 0) {
+		puts("entrou aqui");
+		return;
+	}
+	struct vetor_voos voos = {NULL, 0};
+	arvore_para_vetor(*arvore, &voos);
+	struct arvore *nova_arvore = NULL;
+	adiciona_elementos(&nova_arvore, voos.voos, voos.tamanho);
+	deletar_arvore(*arvore);
+	*arvore = nova_arvore;
+}
+struct voo pegar_voo_console(void) {
+	char origem[11] = {0};
+	char destino[11] = {0};
+	int hora,minutos,dia, mes, ano, num_assentos;
+	printf("Digite a origem(10 caracteres apenas): ");
+	scanf("%s",origem);	
+	printf("Digite o destino(10 caracteres apenas): ");
+	scanf("%s", destino);
+	printf("Digite o numero de assentos disponiveis: ");
+	scanf("%d", &num_assentos);
+	limpar_stdin();
+	printf("Digite a hora: ");
+	scanf("%d", &hora);
+	limpar_stdin();
+	printf("Digite os minutos: ");
+	scanf("%d", &minutos);
+	limpar_stdin();
+	printf("Digite o dia: ");
+	scanf("%d", &dia);
+	limpar_stdin();
+	printf("Digite o mes(01 - 12): ");
+	scanf("%d", &mes);
+	limpar_stdin();
+	printf("Digite o ano: ");
+	scanf("%d", &ano);
+	limpar_stdin();
+	struct voo voo = (struct voo){
+		.data = (struct data){hora,minutos,dia, mes, ano},
+		.num_assentos = num_assentos,
+		.origem = {0},
+		.destino = {0},
+	};
+	memcpy(voo.origem, origem, strlen(origem));
+	memcpy(voo.destino, destino, strlen(destino));
+	return voo;
+}
+
+void esperar_espaco(void) {
+	puts("Aperte <ENTER> para continuar..!");
+	while(getchar() != '\n');
+}
+
+void limpar_stdin(void) {
+	while(getchar() != '\n');
+}
+
+int numero_aleatorio(int minimo, int maximo) {
+	return (rand() % (maximo - minimo + 1)) + minimo;
+}
+
+void palavra_aleatoria(char str[], int tamanho) {
+	int i = 0;
+	for(; i < tamanho; i++) {
+		char letra = (char)numero_aleatorio(65,90);
+		str[i] = letra; 
+	}
+	str[i] = '\0';
+} 
+
+struct voo voo_aleatorio(struct arvore *arvore) {
+	struct voo voo;
+	while(1) {
+		voo =  (struct voo){
+			.data = (struct data){
+						.horas = numero_aleatorio(1, 23),
+						.minutos = numero_aleatorio(1, 59),
+						.dia = numero_aleatorio(1,31),
+						.mes = numero_aleatorio(1,12),
+						.ano = numero_aleatorio(2000, 3000)
+			},
+			.num_assentos = numero_aleatorio(0,255),
+			.origem = {0},
+			.destino = {0}
+		};
+		palavra_aleatoria(voo.origem, 10);
+		palavra_aleatoria(voo.destino, 10);
+		if(pegar_elemento(arvore, cria_numero_voo(voo.data, voo.origem, voo.destino)) == NULL) {
+			break;
+		}
+	}
+		
+	return voo;
+}
+
+void adiciona_7_elementos(struct arvore **arvore) {
+	struct voo voos[] = {
+		voo_aleatorio(*arvore),
+		voo_aleatorio(*arvore),
+		voo_aleatorio(*arvore),
+		voo_aleatorio(*arvore),
+		voo_aleatorio(*arvore),
+		voo_aleatorio(*arvore),
+		voo_aleatorio(*arvore)
+	};
+	adiciona_elementos(arvore, voos, 7);
 }
 
 int main(void) {
+	srand(time(0));
 	struct arvore* arvore = NULL;
-	struct voo voos[] = {
-		(struct voo) {.num_assentos = 5, .origem = "a" ,.destino = "b",  .data = {10,45,2,4,2024}},
-		(struct voo) {.num_assentos = 5, .origem = "a" ,.destino = "b",  .data = {10,46,2,4,2024}},
-		(struct voo) {.num_assentos = 5, .origem = "a" ,.destino = "b",  .data = {10,47,2,4,2024}},
-	};
-	adiciona_elementos(&arvore, voos, 3);
-	adiciona_ou_cria_arvore(&arvore, (struct data) { 10, 48, 2, 4, 2024 }, 5, "a", "b");
-	//adiciona_ou_cria_arvore(&arvore, (struct data){10,49,2,4,2024}, 5,"a","b");
-	mostrar(arvore, 1);
-	puts("===================================");
-	printf("ultimo nivel: %d\n", ultimo_nivel(arvore, 0));
-	printf("Quantidade de voos: %d\n", qtd_voos(arvore));
-	printf("precisa balancear: %d\n",precisa_balancear(arvore));
-	struct voo *array_voos = NULL;
-	int indice = 0;
-	arvore_para_vetor(arvore, &array_voos, &indice);
-	printf("%d\n",indice);
+	int opcao;
+	int continuar = 1;
+	struct voo voo;
+	//arvore_para_vetor(arvore, &voos, &indice);
+	while(continuar) {
+		puts("==========MENU==========");
+		puts("[1] - para adicionar um voo");
+		puts("[2] - para adicionar 7 voos aleatorios");
+		puts("[3] - para ver todos os voos");
+		puts("[4] - para ver todos os voos disponiveis");
+		puts("[5] - para ver todos os voos com menos de 10 assentos disponiveis");
+		puts("[6] - para ver a arvore(numero voo apenas)");
+		puts("[7] - para excluir um voo");
+		puts("[8] - para sair");
+		puts("========================");
+		printf("Digite a sua opcao:");
+		scanf("%d", &opcao);
+		limpar_stdin();
+		switch(opcao) {
+			case 1:
+				 voo = pegar_voo_console();
+				if(adiciona_ou_cria_arvore(&arvore, voo.data, voo.num_assentos, voo.origem, voo.destino)){
+						puts("não foi possivel adicionar esse voo!");
+				} else {
+
+						puts("voo adicionado com sucesso");
+						if(precisa_balancear(arvore)) {
+							balancear_arvore(&arvore);	
+						}
+				}
+				esperar_espaco();
+				break;
+			case 2:
+				adiciona_7_elementos(&arvore);
+				puts("Elementos adicionados com sucesso!");
+				if(precisa_balancear(arvore)) {
+					balancear_arvore(&arvore);	
+				}
+				esperar_espaco();
+				break;
+			case 3:
+				andar_em_ordem_crescente(arvore);
+				esperar_espaco();
+				break;
+			case 4:
+				andar_em_ordem_crescente_disponiveis(arvore);
+				esperar_espaco();
+				break;
+			case 5:
+				andar_em_ordem_crescente_assentos_10(arvore); 
+				esperar_espaco();
+				break;
+			case 6:
+				mostrar(arvore,1);
+				esperar_espaco();
+				break;
+
+			case 7:
+				voo = pegar_voo_console();
+				voo.numero_voo = cria_numero_voo(voo.data, voo.origem, voo.destino);
+				int anular = qtd_voos(arvore) == 1 && pegar_elemento(arvore, voo.numero_voo) != NULL;
+				deletar_elemento(arvore,voo.numero_voo)	;
+				if(anular) {
+					arvore = NULL;
+				}
+				esperar_espaco();
+				break;
+			case 8:
+				continuar = 0;
+				break;
+			default:
+				puts("Opcao invalida");	
+				esperar_espaco();	
+				break;
+		}
+	}
+	if(arvore) deletar_arvore(arvore);
 	return 0;
 }
 
